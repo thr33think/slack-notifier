@@ -13,7 +13,7 @@ push:
 	@docker push $(fullImageName)
 
 test:
-	@docker run -p 8080:8080 -e NOTIFIER_WEBHOOKURL=$(webHookUrl) $(fullImageName)
+	@docker run --rm -d --name slack-notifier -p 8080:8080 -e NOTIFIER_WEBHOOKURL=$(webHookUrl) $(fullImageName)
 
-minio:
-	@docker run -d --rm --privileged -p 9000:9000 --name minio1 -v $(PWD):/data -v $(PWD):/root/.minio minio/minio server /data
+minio: test
+	@docker run -d --rm --privileged -p 9000:9000 --name minio -v $(PWD):/data -v $(PWD):/root/.minio --link slack-notifier:notifier minio/minio server /data
