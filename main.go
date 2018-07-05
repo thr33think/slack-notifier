@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,15 +19,31 @@ type Config struct {
 var config Config
 
 // SlackMsg implements the SlackAPI for incomming hooks
-type SlackMsg struct {
-	Text string `json:"text"`
-}
+var slackMsg = []byte(`{
+		"attachments": [
+			{
+				"title": "New turd online!",
+				"image_url": "http://i.imgur.com/OJkaVOI.jpg?1"
+			},
+			{
+				"fallback": "View in Admin Dashboard",
+				"title": "View in Admin Dashboard",
+				"color": "#3AA3E3",
+				"attachment_type": "default",
+				"actions": [
+						{
+								"name": "dashboard",
+								"text": "Admin Dashboard",
+								"type": "button",
+								"value": "recommend"
+						}
+				]
+			}
+		]
+	}`)
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	var msg SlackMsg
-	msg.Text = config.MsgText
-	msgJSON, _ := json.Marshal(msg)
-	resp, err := http.Post(config.WebHookURL, "Content-Type: application/json", bytes.NewReader(msgJSON))
+	resp, err := http.Post(config.WebHookURL, "Content-Type: application/json", bytes.NewReader(slackMsg))
 	if err != nil {
 		fmt.Printf("Error: %s", err)
 		return
