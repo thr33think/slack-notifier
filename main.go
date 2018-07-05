@@ -83,6 +83,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// fmt.Println(string(msg))
+
 	// Post the custom turd msg to slack
 	resp, err := http.Post(config.WebHookURL, "Content-Type: application/json", bytes.NewReader(msg))
 	if err != nil {
