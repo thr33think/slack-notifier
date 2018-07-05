@@ -12,7 +12,6 @@ import (
 
 // Config is the global app config
 type Config struct {
-	MsgText    string `default:"Hey Hey, there is a new Turd online"`
 	WebHookURL string `required:"true"`
 }
 
