@@ -9,10 +9,10 @@ all: build
 build:
 	@docker build --pull --rm -t $(fullImageName) .
 
-push:
+push: build
 	@docker push $(fullImageName)
 
-test:
+test: build
 	@docker run --rm -d --name slack-notifier -p 8080:8080 -e NOTIFIER_WEBHOOKURL=$(webHookUrl) $(fullImageName)
 
 minio: test
