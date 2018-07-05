@@ -27,16 +27,12 @@ const slackMsg = `{
 				"image_url": "{{ .ImageURL }}"
 			},
 			{
-				"fallback": "View in Admin Dashboard",
-				"title": "View in Admin Dashboard",
-				"color": "#3AA3E3",
-				"attachment_type": "default",
+				"fallback": "Check turd here {{ .DashboardURL }}",
 				"actions": [
 						{
-								"name": "dashboard",
-								"text": "Admin Dashboard",
 								"type": "button",
-								"value": "{{ .DashboardURL }}"
+								"text": "Admin Dashboard",
+								"url": "{{ .DashboardURL }}"
 						}
 				]
 			}
