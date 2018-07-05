@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"text/template"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -19,11 +20,11 @@ type Config struct {
 var config Config
 
 // SlackMsg implements the SlackAPI for incomming hooks
-var slackMsg = []byte(`{
+const slackMsg = `{
 		"attachments": [
 			{
-				"title": "New turd online!",
-				"image_url": "http://i.imgur.com/OJkaVOI.jpg?1"
+				"title": "{{ .Title }}",
+				"image_url": "{{ .ImageURL }}"
 			},
 			{
 				"fallback": "View in Admin Dashboard",
@@ -35,15 +36,55 @@ var slackMsg = []byte(`{
 								"name": "dashboard",
 								"text": "Admin Dashboard",
 								"type": "button",
-								"value": "recommend"
+								"value": "{{ .DashboardURL }}"
 						}
 				]
 			}
 		]
-	}`)
+	}`
+
+// TurdMsg defines a custom turd msg that will be posted to slack
+type TurdMsg struct {
+	Title        string
+	ImageURL     string
+	DashboardURL string
+}
+
+func newTurdMsg(title, imageURL, dashboardURL string) ([]byte, error) {
+	// New turdMsg entity
+	var turdMsg = TurdMsg{
+		Title:        title,
+		ImageURL:     imageURL,
+		DashboardURL: dashboardURL}
+
+	// RenderedTurdMsg holds the rendered template
+	var renderedTurdMsg bytes.Buffer
+
+	// Render the template
+	t := template.Must(template.New("turdMsg").Parse(slackMsg))
+	err := t.Execute(&renderedTurdMsg, turdMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return renderedTurdMsg.Bytes(), nil
+}
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	resp, err := http.Post(config.WebHookURL, "Content-Type: application/json", bytes.NewReader(slackMsg))
+	// parse query values
+	title := r.URL.Query().Get("title")
+	imageURL := r.URL.Query().Get("imageURL")
+	dashboardURL := r.URL.Query().Get("dashboardURL")
+
+	// create a new turd msg based on the query values
+	msg, err := newTurdMsg(title, imageURL, dashboardURL)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		return
+	}
+
+	// Post the custom turd msg to slack
+	resp, err := http.Post(config.WebHookURL, "Content-Type: application/json", bytes.NewReader(msg))
 	if err != nil {
 		fmt.Printf("Error: %s", err)
 		return
