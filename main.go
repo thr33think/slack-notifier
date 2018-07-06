@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"text/template"
+	"time"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -78,15 +79,24 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// fmt.Println(string(msg))
-
 	// Post the custom turd msg to slack
-	resp, err := http.Post(config.WebHookURL, "Content-Type: application/json", bytes.NewReader(msg))
-	if err != nil {
-		fmt.Printf("Error: %s", err)
-		return
-	}
-	fmt.Printf("%s\n", resp.Status)
+	go func() {
+		client := http.Client{
+			Timeout: 2 * time.Second,
+		}
+		req, err := http.NewRequest("POST", config.WebHookURL, bytes.NewReader(msg))
+		if err != nil {
+			fmt.Printf("Error: %s", err)
+			return
+		}
+		req.Header.Add("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Printf("Error: %s", err)
+			return
+		}
+		fmt.Printf("%s\n", resp.Status)
+	}()
 }
 
 func main() {
